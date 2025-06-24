@@ -104,4 +104,4 @@ Sinta-se livre para usá-lo e modificá-lo.
 
 ## 🤛 Autor
 
-Feito c por [Sergio Nogueira]([https://github.com/sergionogueiradev](https://github.com/SergioCodeProjects/cadastro_de_clientes))
+Feito  por [Sergio Nogueira]([https://github.com/sergionogueiradev](https://github.com/SergioCodeProjects/cadastro_de_clientes))
