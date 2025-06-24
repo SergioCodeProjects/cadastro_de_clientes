@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Clientes</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      padding: 30px;
+    }
+
+    h1, h2 {
+      color: #1e572a;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 4%;
+      flex-wrap: wrap;
+    }
+
+    .form-row .form-group {
+      flex: 1 1 48%;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px 20px;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .btn-salvar {
+      background-color: rgb(0, 201, 183);
+    }
+
+    .btn-salvar:hover {
+      background-color: #00b4a3;
+    }
+
+    .btn-editar {
+      background-color: #00a0e0;
+    }
+
+    .btn-editar:hover {
+      background-color: #007db2;
+    }
+
+    .btn-excluir {
+      background-color: #c77019;
+    }
+
+    .btn-excluir:hover {
+      background-color: #a65812;
+    }
+
+    ul {
+      margin-top: 20px;
+      padding: 0;
+    }
+
+    li {
+      list-style: none;
+      background: #ffffff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 5px solid rgb(0, 201, 183);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Cadastro de Clientes</h1>
+
+    <div class="form-row">
+      <div class="form-group">
+        <input v-model="nome" placeholder="Nome completo" />
+      </div>
+      <div class="form-group">
+        <input v-model="cpf_cnpj" placeholder="CPF ou CNPJ" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <input v-model="data_nascimento" type="date" placeholder="Data de Nascimento" />
+      </div>
+      <div class="form-group">
+        <select v-model="genero">
+          <option disabled value="">Selecione o gênero</option>
+          <option>Masculino</option>
+          <option>Feminino</option>
+          <option>Outro</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <select v-model="estado_civil">
+          <option disabled value="">Selecione o estado civil</option>
+          <option>Solteiro(a)</option>
+          <option>Casado(a)</option>
+          <option>Divorciado(a)</option>
+          <option>Viúvo(a)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <input v-model="rg" placeholder="RG" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <input v-model="email" placeholder="E-mail" type="email" />
+      </div>
+      <div class="form-group">
+        <input v-model="celular" placeholder="Celular" />
+      </div>
+    </div>
+
+    <button @click="salvar" class="btn-salvar">{{ editandoId ? 'Atualizar' : 'Cadastrar' }}</button>
+
+    <h2>Clientes Cadastrados</h2>
+    <div class="form-group">
+      <input v-model="filtro" placeholder="🔍 Pesquisar por nome..." />
+    </div>
+    <ul>
+      <li v-for="cliente in clientesFiltrados" :key="cliente.id">
+        <strong>{{ cliente.nome }}</strong> ({{ cliente.cpf_cnpj }})<br>
+        Nascimento: {{ cliente.data_nascimento }}<br>
+        Gênero: {{ cliente.genero }} | Estado civil: {{ cliente.estado_civil }}<br>
+        RG: {{ cliente.rg }} | E-mail: {{ cliente.email }}<br>
+        Celular: {{ cliente.celular }}<br>
+        <button @click="prepararEdicao(cliente)" class="btn-editar">Editar</button>
+        <button @click="excluir(cliente.id)" class="btn-excluir">Excluir</button>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          clientes: [],
+          nome: '', 
+          cpf_cnpj: '', 
+          data_nascimento: '',
+          genero: '', 
+          estado_civil: '', 
+          rg: '',
+          email: '', 
+          celular: '',
+          filtro: '',
+          editandoId: null
+        };
+      },
+      computed: {
+        clientesFiltrados() {
+          return this.clientes.filter(c =>
+            c.nome.toLowerCase().includes(this.filtro.toLowerCase())
+          );
+        }
+      },
+      methods: {
+        carregarClientes() {
+          fetch('http://localhost:3000/clientes')
+            .then(res => res.json())
+            .then(data => this.clientes = data);
+        },
+        salvar() {
+          const cliente = {
+            cpf_cnpj: this.cpf_cnpj,
+            nome: this.nome,
+            data_nascimento: this.data_nascimento,
+            genero: this.genero,
+            estado_civil: this.estado_civil,
+            rg: this.rg,
+            email: this.email,
+            celular: this.celular
+          };
+
+          const url = this.editandoId
+            ? `http://localhost:3000/clientes/${this.editandoId}`
+            : `http://localhost:3000/clientes`;
+
+          const method = this.editandoId ? 'PUT' : 'POST';
+
+          fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cliente)
+          }).then(() => {
+            this.carregarClientes();
+            this.limparFormulario();
+          });
+        },
+        prepararEdicao(cliente) {
+          this.editandoId = cliente.id;
+          this.cpf_cnpj = cliente.cpf_cnpj;
+          this.nome = cliente.nome;
+          this.data_nascimento = cliente.data_nascimento;
+          this.genero = cliente.genero;
+          this.estado_civil = cliente.estado_civil;
+          this.rg = cliente.rg;
+          this.email = cliente.email;
+          this.celular = cliente.celular;
+        },
+        excluir(id) {
+          if (confirm('Deseja excluir este cliente?')) {
+            fetch(`http://localhost:3000/clientes/${id}`, {
+              method: 'DELETE'
+            }).then(() => this.carregarClientes());
+          }
+        },
+        limparFormulario() {
+          this.editandoId = null;
+          this.nome = this.cpf_cnpj = this.data_nascimento = '';
+          this.genero = this.estado_civil = this.rg = '';
+          this.email = this.celular = '';
+        }
+      },
+      mounted() {
+        this.carregarClientes();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
